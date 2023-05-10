@@ -1,4 +1,4 @@
-from YMOperator import YMClient
-from AOperator import Player
+import YMOperator
+import AOperator
 
 pass
