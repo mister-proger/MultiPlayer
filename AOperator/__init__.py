@@ -7,13 +7,10 @@ from typing import Optional
 
 
 class Player:
-
     class FileMeta:
 
         def __init__(self, path):
-
             with wave.open(path, 'rb') as file:
-
                 self.channels = file.getnchannels()
 
                 self.width = file.getsampwidth()
@@ -30,18 +27,16 @@ class Player:
 
         self.data = self.FileMeta(self.path)
 
-        self.stream = self.audio.open(format = self.audio.get_format_from_width(self.data.width),
-                                      channels = self.data.channels,
-                                      rate = self.data.rate,
-                                      output = True)
+        self.stream = self.audio.open(format=self.audio.get_format_from_width(self.data.width),
+                                      channels=self.data.channels,
+                                      rate=self.data.rate,
+                                      output=True)
 
         self.status = False
 
         self.flag = True
 
-        self.pause_flag = False
-
-        self.play_thread = threading.Thread(target = self.play)
+        self.play_thread = threading.Thread(target=self.play)
 
     def play(self):
 
@@ -53,39 +48,32 @@ class Player:
 
             data = file.readframes(1024)
 
-            while self.status:
+            while self.flag and data:
 
-                while not self.pause_flag:
+                self.stream.write(data)
 
-                    while self.flag and data:
+                data = file.readframes(1024)
 
-                        self.stream.write(data)
-
-                        data = file.readframes(1024)
-
-                    self.status = False
+            self.status = False
 
     def async_play(self):
 
-        self.play_thread.start()
+        if not self.status:
+            self.play_thread = threading.Thread(target=self.play)
+
+            self.play_thread.start()
 
     def stop(self):
 
         self.flag = False
 
-    def pause(self):
-
-        self.pause_flag = True
-
-    def resume(self):
-
-        self.pause_flag = False
+        self.status = False
 
     def __c_temp(self, path: Optional[str] = 'TEMP'):
 
         subprocess.call(['ffmpeg', '-i', path, '-ar', '44100', self.path],
-                       # stdout=subprocess.DEVNULL,
-                       # stderr=subprocess.DEVNULL
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
                         )
 
     def __del__(self):
