@@ -26,7 +26,7 @@ class Player:
 
         self.path = f'./TEMP/{hex(hash(path[:path.rfind(".")]))[2:]}.wav'
 
-        self.c_temp(path)
+        self.__c_temp(path)
 
         self.data = self.FileMeta(self.path)
 
@@ -38,6 +38,8 @@ class Player:
         self.status = False
 
         self.flag = True
+
+        self.pause_flag = False
 
         self.play_thread = threading.Thread(target = self.play)
 
@@ -51,13 +53,17 @@ class Player:
 
             data = file.readframes(1024)
 
-            while self.flag and data:
+            while self.status:
 
-                self.stream.write(data)
+                while not self.pause_flag:
 
-                data = file.readframes(1024)
+                    while self.flag and data:
 
-            self.status = False
+                        self.stream.write(data)
+
+                        data = file.readframes(1024)
+
+                    self.status = False
 
     def async_play(self):
 
@@ -67,11 +73,19 @@ class Player:
 
         self.flag = False
 
-    def c_temp(self, path: Optional[str] = 'TEMP'):
+    def pause(self):
+
+        self.pause_flag = True
+
+    def resume(self):
+
+        self.pause_flag = False
+
+    def __c_temp(self, path: Optional[str] = 'TEMP'):
 
         subprocess.call(['ffmpeg', '-i', path, '-ar', '44100', self.path],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
+                       # stdout=subprocess.DEVNULL,
+                       # stderr=subprocess.DEVNULL
                         )
 
     def __del__(self):
